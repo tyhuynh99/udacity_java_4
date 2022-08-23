@@ -5,6 +5,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -56,8 +59,17 @@ public class OrderControllerTest {
         user.setCart(cart);
         cart.setUser(user);
 
+        UserOrder order = new UserOrder();
+        order.setItems(cart.getItems().stream().collect(Collectors.toList()));
+        order.setTotal(cart.getTotal());
+        order.setUser(cart.getUser());
+
+        List<UserOrder> orders = new ArrayList<>();
+        orders.add(order);
+
         when(userRepository.findByUsername("user1")).thenReturn(user);
         when(userRepository.findByUsername("testingUser")).thenReturn(null);
+        when(orderRepository.findByUser(user)).thenReturn(orders);
     }
 
     @Test
@@ -75,6 +87,25 @@ public class OrderControllerTest {
     public void submitTest_InvalidUser() {
         String username = "testingUser";
         ResponseEntity<UserOrder> response = orderController.submit(username);
+        assertEquals(404, response.getStatusCodeValue());
+    }
+
+    @Test
+    public void getOrdersForUserTest_HappyPath() {
+        String username = "user1";
+        ResponseEntity<List<UserOrder>> response = orderController.getOrdersForUser(username);
+        List<UserOrder> body = response.getBody();
+        UserOrder order = body.get(0);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(1, body.size());
+        assertEquals(BigDecimal.valueOf(3.3), order.getTotal());
+        assertEquals(2, order.getItems().size());
+    }
+
+    @Test
+    public void getOrdersForUserTest_InvalidUser() {
+        String username = "testingUser";
+        ResponseEntity<List<UserOrder>> response = orderController.getOrdersForUser(username);
         assertEquals(404, response.getStatusCodeValue());
     }
 }
