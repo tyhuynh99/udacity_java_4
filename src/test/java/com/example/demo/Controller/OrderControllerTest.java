@@ -70,4 +70,11 @@ public class OrderControllerTest {
         assertEquals(username, body.getUser().getUsername());
         assertEquals(BigDecimal.valueOf(3.3), body.getTotal());
     }
+
+    @Test
+    public void submitTest_InvalidUser() {
+        String username = "testingUser";
+        ResponseEntity<UserOrder> response = orderController.submit(username);
+        assertEquals(404, response.getStatusCodeValue());
+    }
 }
