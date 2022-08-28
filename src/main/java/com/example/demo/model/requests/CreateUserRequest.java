@@ -1,7 +1,5 @@
 package com.example.demo.model.requests;
 
-import javax.validation.constraints.Size;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class CreateUserRequest {
@@ -10,7 +8,6 @@ public class CreateUserRequest {
 	private String username;
 
 	@JsonProperty
-	@Size(min = 8, max = 16, message = "Password between 8 and 16 characters")
 	private String password;
 
 	public String getUsername() {

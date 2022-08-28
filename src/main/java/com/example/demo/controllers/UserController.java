@@ -2,6 +2,8 @@ package com.example.demo.controllers;
 
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,8 @@ import com.example.demo.model.requests.CreateUserRequest;
 @RequestMapping("/api/user")
 public class UserController {
 
+	private static final Logger log = LoggerFactory.getLogger(UserController.class);
+
 	@Autowired
 	private UserRepository userRepository;
 
@@ -35,11 +39,38 @@ public class UserController {
 	@GetMapping("/{username}")
 	public ResponseEntity<User> findByUserName(@PathVariable String username) {
 		User user = userRepository.findByUsername(username);
-		return user == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(user);
+		if (user == null) {
+			log.error("Username: %s not found" + username);
+			return ResponseEntity.notFound().build();
+		}
+		log.info("User found");
+		return ResponseEntity.ok(user);
 	}
 
 	@PostMapping("/create")
-	public ResponseEntity<User> createUser(@Valid @RequestBody CreateUserRequest createUserRequest) {
+	public ResponseEntity<User> createUser(@RequestBody CreateUserRequest createUserRequest) {
+
+		if (createUserRequest.getPassword() == null) {
+			log.error("Password is NULL");
+			return ResponseEntity.badRequest().build();
+		}
+		if (createUserRequest.getPassword().isEmpty()) {
+			log.error("Password is empty");
+			return ResponseEntity.badRequest().build();
+		}
+		if (createUserRequest.getPassword().length() < 8 || createUserRequest.getPassword().length() > 16) {
+			log.error("Password must be between 8 and 16 characters");
+			return ResponseEntity.badRequest().build();
+		}
+		if (createUserRequest.getUsername() == null) {
+			log.error("username is NULL");
+			return ResponseEntity.badRequest().build();
+		}
+		if (createUserRequest.getUsername().isEmpty()) {
+			log.error("username is empty");
+			return ResponseEntity.badRequest().build();
+		}
+
 		User user = new User();
 		user.setUsername(createUserRequest.getUsername());
 		user.setPassword(createUserRequest.getPassword());
@@ -47,6 +78,8 @@ public class UserController {
 		cartRepository.save(cart);
 		user.setCart(cart);
 		userRepository.save(user);
+
+		log.info("Save user successes");
 		return ResponseEntity.ok(user);
 	}
 
